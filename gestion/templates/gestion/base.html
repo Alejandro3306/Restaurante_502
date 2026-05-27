@@ -1,120 +1,75 @@
-{% load static rol_tags %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Pasta La Vista{% endblock %} — Gestión</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'gestion/css/style.css' %}">
-    {% block extra_css %}{% endblock %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Restaurante Pasta La Vista</title>
+    <link rel="stylesheet" href="{% static 'gestion/app.css' %}">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
-    <!-- HEADER -->
-    <header class="site-header">
-        <div class="header-inner">
-            <a href="/" class="header-marca">
-                <div class="header-emblema">🍝</div>
-                <div class="header-texto">
-                    <span class="header-nombre">Pasta La Vista</span>
-                    <span class="header-slogan">Sistema de gestión de pedidos</span>
-                </div>
-            </a>
-            <div class="header-sep"></div>
-            {% if user.is_authenticated %}
-                {% if user|tiene_rol:"administrador" %}
-                    <span class="header-rol-badge rol-admin">👑 Administrador</span>
-                {% elif user|tiene_rol:"mesero" %}
-                    <span class="header-rol-badge rol-mesero">🍽️ Mesero</span>
-                {% elif user|tiene_rol:"cajero" %}
-                    <span class="header-rol-badge rol-cajero">💳 Cajero</span>
-                {% endif %}
-            {% endif %}
-            <span class="header-panel-label">Panel Administrativo</span>
-        </div>
-    </header>
+<header class="site-header">
+    <p class="site-header__title">
+        Sistema de Gestión de Pedidos — <em>Pasta La Vista</em>
+    </p>
+</header>
 
-    <!-- NAV -->
-    <nav class="site-nav">
-        <div class="nav-inner">
+{% with u=request.resolver_match.url_name|default:'' %}
+<nav class="site-nav">
 
-            <a href="/" {% if request.path == '/' %}class="activo"{% endif %}>
-                <span class="nav-icon">🏠</span>Inicio
-            </a>
+{% if request.user.is_authenticated %}
 
-            {% if user|tiene_rol:"administrador,mesero" %}
-            <a href="/clientes/" {% if request.path == '/clientes/' %}class="activo"{% endif %}>
-                <span class="nav-icon">👤</span>Clientes
-            </a>
-            {% endif %}
+<!-- ✅ USUARIO Y LOGOUT -->
+<span class="site-nav__meta">
+    {{ request.user.username }} · 
+    <form action="{% url 'logout' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="background:none;border:none;color:white;cursor:pointer;">
+            Cerrar sesión
+        </button>
+    </form>
+</span>
 
-            {% if user|tiene_rol:"administrador" %}
-            <a href="/empleados/" {% if request.path == '/empleados/' %}class="activo"{% endif %}>
-                <span class="nav-icon">👥</span>Empleados
-            </a>
-            {% endif %}
+<!-- ✅ ADMIN -->
+{% if request.user.perfil.rol.nombre == 'Administrador' %}
+    <a href="{% url 'inicio' %}" class="nav-link{% if u == 'inicio' %} nav-link--active{% endif %}">Inicio</a>
+    <a href="{% url 'cliente_lista' %}" class="nav-link{% if 'cliente' in u %} nav-link--active{% endif %}">Clientes</a>
+    <a href="{% url 'empleado_lista' %}" class="nav-link{% if 'empleado' in u %} nav-link--active{% endif %}">Empleados</a>
+    <a href="{% url 'mesa_lista' %}" class="nav-link{% if 'mesa' in u %} nav-link--active{% endif %}">Mesas</a>
+    <a href="{% url 'plato_lista' %}" class="nav-link{% if 'plato' in u %} nav-link--active{% endif %}">Platos</a>
+    <a href="{% url 'orden_lista' %}" class="nav-link{% if 'orden' in u %} nav-link--active{% endif %}">Órdenes</a>
+    <a href="{% url 'factura_lista' %}" class="nav-link{% if 'factura' in u %} nav-link--active{% endif %}">Facturas</a>
+    <a href="/admin/" class="nav-link">Admin</a>
+{% endif %}
 
-            {% if user|tiene_rol:"administrador,mesero" %}
-            <a href="/mesas/" {% if request.path == '/mesas/' %}class="activo"{% endif %}>
-                <span class="nav-icon">🪑</span>Mesas
-            </a>
-            {% endif %}
+<!-- ✅ MESERO -->
+{% if request.user.perfil.rol.nombre == 'Mesero' %}
+    <a href="{% url 'mesa_lista' %}" class="nav-link{% if 'mesa' in u %} nav-link--active{% endif %}">Mesas</a>
+    <a href="{% url 'orden_lista' %}" class="nav-link{% if 'orden' in u %} nav-link--active{% endif %}">Órdenes</a>
+    <a href="{% url 'cliente_lista' %}" class="nav-link{% if 'cliente' in u %} nav-link--active{% endif %}">Clientes</a>
+    <a href="{% url 'plato_lista' %}" class="nav-link{% if 'plato' in u %} nav-link--active{% endif %}">Menú</a>
+{% endif %}
 
-            {% if user|tiene_rol:"administrador,mesero" %}
-            <a href="/platos/" {% if request.path == '/platos/' %}class="activo"{% endif %}>
-                <span class="nav-icon">🍽️</span>Platos
-            </a>
-            {% endif %}
+<!-- ✅ CAJERO -->
+{% if request.user.perfil.rol.nombre == 'Cajero' %}
+    <a href="{% url 'orden_lista' %}" class="nav-link{% if 'orden' in u %} nav-link--active{% endif %}">Órdenes</a>
+    <a href="{% url 'factura_lista' %}" class="nav-link{% if 'factura' in u %} nav-link--active{% endif %}">Facturas</a>
+{% endif %}
 
-            {% if user|tiene_rol:"administrador,mesero,cajero" %}
-            <a href="/ordenes/" {% if request.path == '/ordenes/' %}class="activo"{% endif %}>
-                <span class="nav-icon">📋</span>Órdenes
-            </a>
-            {% endif %}
+{% endif %}
 
-            {% if user|tiene_rol:"administrador,cajero" %}
-            <a href="/facturas/" {% if request.path == '/facturas/' %}class="activo"{% endif %}>
-                <span class="nav-icon">🧾</span>Facturas
-            </a>
-            {% endif %}
+</nav>
+{% endwith %}
 
-            <div class="nav-sep"></div>
+<main class="site-main">
+    <div class="contenedor">
+        {% block content %}
+        {% endblock %}
+    </div>
+</main>
 
-            {% if user.is_authenticated %}
-                <span class="usuario-logueado">👤 {{ user.username }}</span>
-                <a href="{% url 'logout' %}">
-                    <span class="nav-icon">🚪</span>Cerrar Sesión
-                </a>
-            {% else %}
-                <a href="{% url 'login' %}">
-                    <span class="nav-icon">🔑</span>Login
-                </a>
-            {% endif %}
-
-        </div>
-    </nav>
-
-    <!-- CONTENIDO -->
-    <main>
-        <div class="contenedor">
-            {% if messages %}
-                <ul class="mensajes">
-                    {% for message in messages %}
-                        <li class="mensaje mensaje-{{ message.tags }}">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-
-    <footer class="site-footer">
-        &copy; 2026 <span>Pasta La Vista</span> — Sistema de gestión de pedidos
-    </footer>
-
-    {% block extra_js %}{% endblock %}
 </body>
 </html>
+
+``
